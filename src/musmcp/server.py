@@ -7,7 +7,7 @@ from mcp.server.fastmcp import FastMCP
 # Initialize FastMCP server
 mcp = FastMCP("Csound Controller")
 
-@mcp.tool()
+# Internal helper function, not exposed as a tool
 def render_csd(csd_content: str, output_filename: str | None = None) -> str:
     """
     Render a Csound (.csd) string to a WAV audio file.
@@ -51,7 +51,7 @@ def render_csd(csd_content: str, output_filename: str | None = None) -> str:
     except Exception as e:
         return f"Failed to execute Csound: {str(e)}"
 
-@mcp.tool()
+# Internal helper function, not exposed as a tool
 def synthesize_tone(pitch: float, duration: float, output_filename: str | None = None) -> str:
     """
     Generate a simple monophonic sine wave tone.
