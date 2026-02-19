@@ -5,7 +5,8 @@ The Csound MCP server exposes [Csound](https://csound.com/) audio engine functio
 ## Features
 
 - **Stateless Architecture:** Lightweight execution using standard Csound.
-- **Subtractive Synthesis:** Explays a `synthesize_subtractive` tool that provides LLM-friendly 0-255 mapped ADSR parameters to shape a sawtooth oscillator run through a lowpass filter.
+- **Subtractive Synthesis:** Exposes a `synthesize_subtractive` tool that provides LLM-friendly 0-255 mapped ADSR parameters to shape a sawtooth oscillator run through a lowpass filter.
+- **Semantic Guardrails:** The tool parameters are heavily documented with acoustic definitions (e.g., matching "fast attack" to integer ranges), and an MCP Resource `lore://sound_design` is provided to teach agents how to synthesize classic instruments.
 - **Error Handling:** Gracefully captures and returns `stdout` and `stderr` content to the agent if `csound` compilation or execution fails.
 
 ## Prerequisites
@@ -42,6 +43,8 @@ To configure this server in an MCP client (such as Claude Desktop or Cursor), ad
 ```
 
 ## Usage Example (Agent perspective)
+
+Before using the tool, an agent can read the provided `lore://sound_design` MCP resource to understand how to map acoustic concepts to the `0-255` ADSR integers.
 
 The `synthesize_subtractive` tool is specifically designed to be easy for LLM agents to use. It abstracts complex Csound envelopes into simple `0-255` integers.
 

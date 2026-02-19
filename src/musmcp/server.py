@@ -103,17 +103,29 @@ def synthesize_subtractive(
     Generate a tone using subtractive synthesis (sawtooth + lowpass filter).
     
     Args:
-        pitch: The fundamental frequency in Hz (e.g., 440.0).
-        duration: The duration of the tone in seconds.
-        cutoff_hz: Base filter cutoff frequency in Hz (e.g., 800.0).
-        attack: Amp attack time, 0-255. Maps to 0.001 - 2.0s.
-        decay: Amp decay time, 0-255. Maps to 0.001 - 2.0s.
-        sustain: Amp sustain level, 0-255. Maps to 0.0 - 1.0.
-        release: Amp release time, 0-255. Maps to 0.001 - 5.0s.
-        output_filename: Optional name for the output file.
+        pitch: The fundamental frequency in Hz (e.g., 55.0 for Bass, 440.0 for Lead).
+        duration: The total length of the note in seconds.
+        cutoff_hz: Filter brightness. 
+            - 100-400: Dark, muffled (Bass, Deep Pads)
+            - 800-1500: Warm, midrange (Warm Pads, Keys)
+            - 2000-5000: Bright, piercing (Leads, Plucks)
+        attack: Time to reach max volume (0-255).
+            - 0-10: Instant hit (Plucks, Kicks, Percussive Bass)
+            - 50-100: Medium swell (Soft Leads, Strings)
+            - 150-255: Very slow fade in (Ambient Pads, Drones)
+        decay: Time to drop from max volume to sustain level (0-255).
+            - 10-50: Fast drop (Punchy Bass)
+            - 80-150: Natural decay (Keys, Guitars)
+        sustain: Level held after decay phase (0-255).
+            - 0: Note dies out entirely (Plucks, Percussion)
+            - 255: Note holds at maximum volume (Organs, Synths)
+        release: Fade out time after the note ends (0-255).
+            - 10-30: Stops immediately (Staccato Bass, Tight Leads)
+            - 150-255: Long ringing tail (Cinematic Pads, Reverbs)
+        output_filename: Optional name for the output file (e.g. 'warm_pad.wav').
         
     Returns:
-        The absolute path to the generated .wav file.
+        The absolute path to making the generated .wav file.
     """
     # Clamp inputs just in case
     att = max(0, min(255, attack))
@@ -163,6 +175,43 @@ i 1 0 {duration}
 </CsScore>
 </CsoundSynthesizer>"""
     return render_csd(csd, output_filename)
+
+@mcp.resource("lore://sound_design")
+def get_sound_design_lore() -> str:
+    """Cheat sheet for configuring standard synth archetypes with synthesize_subtractive."""
+    return """
+SOUND DESIGN CHEATSHEET for Subtractive Synthesis Tool
+
+1. BASS PLUCK / PERCUSSION
+Description: Short, punchy, dark, dies away quickly.
+Parameters:
+- pitch: Low (30Hz - 80Hz)
+- cutoff_hz: Low to Medium (200 - 800)
+- attack: Very Low (0-10)
+- decay: Medium Low (50-100)
+- sustain: Zero (0) - It should not hold!
+- release: Medium Low (30-80)
+
+2. WARM PAD / AMBIENCE
+Description: Slow building, warm, sustains forever, long fade out.
+Parameters:
+- pitch: Mid (150Hz - 400Hz)
+- cutoff_hz: Medium (800 - 1500)
+- attack: High (150-255)
+- decay: Medium (100)
+- sustain: High (150-255)
+- release: High (150-255)
+
+3. AGGRESSIVE LEAD
+Description: Bright, fast attacking, holds steady for melodies.
+Parameters:
+- pitch: High (400Hz - 1000Hz)
+- cutoff_hz: High (3000 - 5000)
+- attack: Low (0-20)
+- decay: Low (50)
+- sustain: Max (255)
+- release: Low (20-50)
+"""
 
 def main():
     mcp.run(transport='stdio')
