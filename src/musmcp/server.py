@@ -89,7 +89,7 @@ def map_0_255_to_range(val: int, min_val: float, max_val: float) -> float:
     return min_val + (max_val - min_val) * (val / 255.0)
 
 @mcp.tool()
-def synthesize_subtractive(
+def synthesize_sawtooth_lead_bass(
     pitch: float, 
     duration: float, 
     cutoff_hz: float, 
@@ -100,7 +100,8 @@ def synthesize_subtractive(
     output_filename: str | None = None
 ) -> str:
     """
-    Generate a tone using subtractive synthesis (sawtooth + lowpass filter).
+    Generate a tone using a subtractive sawtooth oscillator and lowpass filter.
+    Perfect for designing classic synthesizer Basses, Leads, and Plucks.
     
     Args:
         pitch: The fundamental frequency in Hz (e.g., 55.0 for Bass, 440.0 for Lead).
@@ -178,9 +179,9 @@ i 1 0 {duration}
 
 @mcp.resource("lore://sound_design")
 def get_sound_design_lore() -> str:
-    """Cheat sheet for configuring standard synth archetypes with synthesize_subtractive."""
+    """Cheat sheet for configuring standard synth archetypes with synthesize_sawtooth_lead_bass."""
     return """
-SOUND DESIGN CHEATSHEET for Subtractive Synthesis Tool
+SOUND DESIGN CHEATSHEET for synthesize_sawtooth_lead_bass
 
 1. BASS PLUCK / PERCUSSION
 Description: Short, punchy, dark, dies away quickly.
