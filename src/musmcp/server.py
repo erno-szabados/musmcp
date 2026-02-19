@@ -44,6 +44,116 @@ def render_csd(csd_content: str) -> str:
     except Exception as e:
         return f"Failed to execute Csound: {str(e)}"
 
+@mcp.tool()
+def synthesize_tone(pitch: float, duration: float) -> str:
+    """
+    Generate a simple monophonic sine wave tone.
+    
+    Args:
+        pitch: The frequency of the tone in Hz.
+        duration: The duration of the tone in seconds.
+        
+    Returns:
+        The absolute path to the generated .wav file.
+    """
+    csd_template = f"""<CsoundSynthesizer>
+<CsOptions>
+</CsOptions>
+<CsInstruments>
+sr = 44100
+ksmps = 32
+nchnls = 1
+0dbfs = 1
+
+instr 1
+    a1 poscil 0.5, {pitch}
+    out a1
+endin
+</CsInstruments>
+<CsScore>
+i 1 0 {duration}
+</CsScore>
+</CsoundSynthesizer>"""
+    return render_csd(csd_template)
+
+def map_0_255_to_range(val: int, min_val: float, max_val: float) -> float:
+    """Map an integer 0-255 linearly to a float range."""
+    return min_val + (max_val - min_val) * (val / 255.0)
+
+@mcp.tool()
+def synthesize_subtractive(
+    pitch: float, 
+    duration: float, 
+    cutoff_hz: float, 
+    attack: int, 
+    decay: int, 
+    sustain: int, 
+    release: int
+) -> str:
+    """
+    Generate a tone using subtractive synthesis (sawtooth + lowpass filter).
+    
+    Args:
+        pitch: The fundamental frequency in Hz (e.g., 440.0).
+        duration: The duration of the tone in seconds.
+        cutoff_hz: Base filter cutoff frequency in Hz (e.g., 800.0).
+        attack: Amp attack time, 0-255. Maps to 0.001 - 2.0s.
+        decay: Amp decay time, 0-255. Maps to 0.001 - 2.0s.
+        sustain: Amp sustain level, 0-255. Maps to 0.0 - 1.0.
+        release: Amp release time, 0-255. Maps to 0.001 - 5.0s.
+        
+    Returns:
+        The absolute path to the generated .wav file.
+    """
+    # Clamp inputs just in case
+    att = max(0, min(255, attack))
+    dec = max(0, min(255, decay))
+    sus = max(0, min(255, sustain))
+    rel = max(0, min(255, release))
+    
+    # Map to real seconds/levels
+    att_sec = map_0_255_to_range(att, 0.001, 2.0)
+    dec_sec = map_0_255_to_range(dec, 0.001, 2.0)
+    sus_lvl = map_0_255_to_range(sus, 0.0, 1.0)
+    rel_sec = map_0_255_to_range(rel, 0.001, 5.0)
+    
+    # We must add release time to overall score duration so the tail isn't cut off
+    score_duration = duration + rel_sec
+    
+    csd = f"""<CsoundSynthesizer>
+<CsOptions>
+</CsOptions>
+<CsInstruments>
+sr = 44100
+ksmps = 32
+nchnls = 1
+0dbfs = 1
+
+instr 1
+    ; 1. Amplitude ADSR 
+    ; madsr allows the note to release over time when it finishes
+    kamp madsr {att_sec}, {dec_sec}, {sus_lvl}, {rel_sec}
+    
+    ; 2. Oscillator - Sawtooth (vco2 mode 0 is saw)
+    asig vco2 1.0, {pitch}, 0
+    
+    ; 3. Filter - Moog ladder lowpass
+    ; We add a slight envelope to the filter cutoff for more dynamic sound
+    kfilt_env expseg {cutoff_hz}*3, {att_sec}+{dec_sec}, {cutoff_hz}
+    afil moogladder asig, kfilt_env, 0.4
+    
+    ; 4. Output (reduced master amplitude by 0.5 to leave headroom)
+    out (afil * kamp) * 0.5
+endin
+</CsInstruments>
+<CsScore>
+; Play instr 1, from start=0, for specified parameter duration.
+; The madsr opcode handles extending the note for the release phase.
+i 1 0 {duration}
+</CsScore>
+</CsoundSynthesizer>"""
+    return render_csd(csd)
+
 def main():
     mcp.run(transport='stdio')
 

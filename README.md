@@ -5,7 +5,9 @@ The Csound MCP server exposes [Csound](https://csound.com/) audio engine functio
 ## Features
 
 - **Stateless Architecture:** Lightweight execution using standard Csound.
-- **Render to WAV:** Provides a powerful `render_csd` tool that takes a `.csd` string (orchestra + score) and generates a `.wav` file, passing back the absolute path to the wav file to the agent.
+- **Render to WAV:** Provides a powerful `render_csd` tool that takes a `.csd` string (orchestra + score) and generates a `.wav` file.
+- **Tone Synthesis MVP:** Includes a `synthesize_tone` tool that generates a simple monophonic sine wave given a pitch and duration.
+- **Subtractive Synthesis:** Includes a `synthesize_subtractive` tool that provides LLM-friendly 0-255 mapped ADSR parameters to shape a sawtooth oscillator run through a lowpass filter.
 - **Error Handling:** Gracefully captures and returns `stdout` and `stderr` content to the agent if `csound` compilation or execution fails.
 
 ## Prerequisites
