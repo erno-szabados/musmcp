@@ -69,3 +69,48 @@ i 1 0 1
 ```
 
 This will run Csound in the background and return the temporary `.wav` file location for playback.
+
+### Using `synthesize_subtractive`
+
+The `synthesize_subtractive` tool is specifically designed to be easy for LLM agents to use. It abstracts complex Csound envelopes into simple `0-255` integers.
+
+Here is how an agent should map desired sounds to the tool's parameters:
+
+**1. A Plucky/Percussive Bass (Fast attack, fast decay, no sustain)**
+```json
+{
+  "pitch": 55.0,
+  "duration": 1.5,
+  "cutoff_hz": 400.0,
+  "attack": 5,
+  "decay": 80,
+  "sustain": 0,
+  "release": 50
+}
+```
+
+**2. A Warm Pad (Slow attack, high sustain, long release)**
+```json
+{
+  "pitch": 220.0,
+  "duration": 4.0,
+  "cutoff_hz": 1200.0,
+  "attack": 150,
+  "decay": 100,
+  "sustain": 200,
+  "release": 200
+}
+```
+
+**3. An Aggressive Lead (Fast attack, high sustain, bright filter)**
+```json
+{
+  "pitch": 880.0,
+  "duration": 2.0,
+  "cutoff_hz": 4500.0,
+  "attack": 10,
+  "decay": 50,
+  "sustain": 255,
+  "release": 20
+}
+```
