@@ -6,7 +6,8 @@ The Csound MCP server exposes [Csound](https://csound.com/) audio engine functio
 
 - **Stateless Architecture:** Lightweight execution using standard Csound.
 - **Subtractive Synthesis:** Exposes a `synthesize_sawtooth_lead_bass` tool that provides LLM-friendly 0-255 mapped ADSR parameters to shape a sawtooth oscillator run through a lowpass filter.
-- **Semantic Guardrails:** The tool parameters are heavily documented with acoustic definitions (e.g., matching "fast attack" to integer ranges), and an MCP Resource `lore://sound_design` is provided to teach agents how to synthesize classic instruments.
+- **Drum Synthesis:** Exposes a `synthesize_kick_drum` tool specialized for crafting Sub Basses, punchy House kicks, and distorted Hardstyle kicks using intuitive parameters like `punch` and `drive`.
+- **Semantic Guardrails:** The tool parameters are heavily documented with acoustic definitions (e.g., matching "fast attack" to integer ranges), and MCP Resources (`lore://sound_design`, `lore://drum_design`) are provided to teach agents how to synthesize classic instruments.
 - **Error Handling:** Gracefully captures and returns `stdout` and `stderr` content to the agent if `csound` compilation or execution fails.
 
 ## Prerequisites
@@ -44,8 +45,9 @@ To configure this server in an MCP client (such as Claude Desktop or Cursor), ad
 
 ## Usage Example (Agent perspective)
 
-Before using the tool, an agent can read the provided `lore://sound_design` MCP resource to understand how to map acoustic concepts to the `0-255` ADSR integers.
+Before using the synthesis tools, an agent can read the provided `lore://sound_design` and `lore://drum_design` MCP resources to understand how to map acoustic concepts to the `0-255` integers.
 
+### 1. `synthesize_sawtooth_lead_bass`
 The `synthesize_sawtooth_lead_bass` tool is specifically designed to be easy for LLM agents to use. It abstracts complex Csound envelopes into simple `0-255` integers.
 
 Here is how an agent should map desired sounds to the tool's parameters:
@@ -89,5 +91,31 @@ Here is how an agent should map desired sounds to the tool's parameters:
   "sustain": 255,
   "release": 20,
   "output_filename": "aggr_lead.wav"
+}
+```
+
+### 2. `synthesize_kick_drum`
+
+A dedicated tool for creating everything from soft acoustic thumps to booming 808s and distorted hard kicks.
+
+**1. 808 Sub Kick (Booming, no hard click)**
+```json
+{
+  "fundamental_hz": 45.0,
+  "punch": 20,
+  "decay": 220,
+  "drive": 10,
+  "output_filename": "808_sub.wav"
+}
+```
+
+**2. Hardstyle / Industrial Kick (Heavily distorted with massive click)**
+```json
+{
+  "fundamental_hz": 50.0,
+  "punch": 200,
+  "decay": 150,
+  "drive": 220,
+  "output_filename": "hard_kick.wav"
 }
 ```

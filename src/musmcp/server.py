@@ -214,6 +214,114 @@ Parameters:
 - release: Low (20-50)
 """
 
+@mcp.tool()
+def synthesize_kick_drum(
+    fundamental_hz: float,
+    punch: int,
+    decay: int,
+    drive: int,
+    output_filename: str | None = None
+) -> str:
+    """
+    Generate a classic analog-style kick drum using a Sine oscillator with a pitch envelope.
+    
+    Args:
+        fundamental_hz: The resting sub-bass frequency in Hz (e.g., 40.0 - 80.0 Hz).
+        punch: The speed and intensity of the initial transient click (0-255).
+            - 0-50: Soft, acoustic-style thump.
+            - 100-150: Punchy EDM/House kick.
+            - 200-255: Hard, laser-like transient (Psytrance/Hardstyle).
+        decay: The length of the amplitude decay (0-255).
+            - 10-50: Short, tight clicky kick.
+            - 100-150: Standard club kick.
+            - 200-255: Long, booming 808 sub.
+        drive: Amount of saturation/distortion to apply (0-255).
+            - 0-20: Clean sine wave, smooth sub.
+            - 100-150: Warm, saturated analog feel.
+            - 200-255: Heavily distorted, gabber/hardcore kick.
+        output_filename: Optional name for the output file.
+        
+    Returns:
+        The absolute path to the generated .wav file.
+    """
+    pnc = max(0, min(255, punch))
+    dec = max(0, min(255, decay))
+    drv = max(0, min(255, drive))
+    
+    # Map decay (0-255) to 0.1 - 3.0 seconds
+    dec_sec = map_0_255_to_range(dec, 0.1, 3.0)
+    
+    # Map punch to pitch envelope parameters
+    # High punch = higher start pitch and faster drop
+    pitch_start = fundamental_hz + map_0_255_to_range(pnc, 100.0, 3000.0)
+    punch_drop_time = map_0_255_to_range(pnc, 0.1, 0.01) # higher punch = faster drop
+    
+    # Map drive to a multiplier for saturation
+    drive_mult = map_0_255_to_range(drv, 1.0, 20.0)
+    
+    csd = f"""<CsoundSynthesizer>
+<CsOptions>
+</CsOptions>
+<CsInstruments>
+sr = 44100
+ksmps = 32
+nchnls = 1
+0dbfs = 1
+
+instr 1
+    ; 1. Amplitude Envelope (exponential decay)
+    kamp expseg 1.0, {dec_sec}, 0.001
+    
+    ; 2. Pitch Envelope
+    kpitch expseg {pitch_start}, {punch_drop_time}, {fundamental_hz}, {dec_sec}, {fundamental_hz}
+    
+    ; 3. Oscillator (Sine wave)
+    asig poscil kamp, kpitch
+    
+    ; 4. Saturation/Drive (using tanh for soft clipping)
+    asig = tanh(asig * {drive_mult})
+    
+    ; Normalize back down slightly if heavily driven
+    out asig * 0.8
+endin
+</CsInstruments>
+<CsScore>
+i 1 0 {dec_sec}
+</CsScore>
+</CsoundSynthesizer>"""
+    return render_csd(csd, output_filename)
+
+@mcp.resource("lore://drum_design")
+def get_drum_design_lore() -> str:
+    """Cheat sheet for configuring standard kick drums with synthesize_kick_drum."""
+    return """
+SOUND DESIGN CHEATSHEET for synthesize_kick_drum
+
+1. 808 SUB BASS
+Description: Long booming low end, soft transient.
+Parameters:
+- fundamental_hz: 45.0
+- punch: 20
+- decay: 220
+- drive: 10
+
+2. PUNCHY HOUSE KICK
+Description: Tight, thumping, hits you in the chest.
+Parameters:
+- fundamental_hz: 55.0
+- punch: 150
+- decay: 80
+- drive: 50
+
+3. HARDSTYLE / INDUSTRIAL KICK
+Description: Heavily distorted, aggressive click, massive tail.
+Parameters:
+- fundamental_hz: 50.0
+- punch: 200
+- decay: 150
+- drive: 220
+"""
+
 def main():
     mcp.run(transport='stdio')
 
