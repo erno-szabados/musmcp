@@ -8,12 +8,13 @@ from mcp.server.fastmcp import FastMCP
 mcp = FastMCP("Csound Controller")
 
 @mcp.tool()
-def render_csd(csd_content: str) -> str:
+def render_csd(csd_content: str, output_filename: str | None = None) -> str:
     """
     Render a Csound (.csd) string to a WAV audio file.
     
     Args:
         csd_content: The complete Csound orchestra and score as a string.
+        output_filename: Optional name for the output file in the current directory.
         
     Returns:
         The absolute path to the generated .wav file.
@@ -24,9 +25,15 @@ def render_csd(csd_content: str) -> str:
             csd_file.write(csd_content)
             csd_path = csd_file.name
             
-        # Create a temporary path for the .wav output
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as wav_file:
-            wav_path = wav_file.name
+        # Determine the .wav output path
+        if output_filename:
+            # Ensure it ends with .wav
+            if not output_filename.endswith(".wav"):
+                output_filename += ".wav"
+            wav_path = str(pathlib.Path(output_filename).absolute())
+        else:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as wav_file:
+                wav_path = wav_file.name
 
         # Execute csound to render the file
         # -o specifies the output file
@@ -45,13 +52,14 @@ def render_csd(csd_content: str) -> str:
         return f"Failed to execute Csound: {str(e)}"
 
 @mcp.tool()
-def synthesize_tone(pitch: float, duration: float) -> str:
+def synthesize_tone(pitch: float, duration: float, output_filename: str | None = None) -> str:
     """
     Generate a simple monophonic sine wave tone.
     
     Args:
         pitch: The frequency of the tone in Hz.
         duration: The duration of the tone in seconds.
+        output_filename: Optional name for the output file.
         
     Returns:
         The absolute path to the generated .wav file.
@@ -74,7 +82,7 @@ endin
 i 1 0 {duration}
 </CsScore>
 </CsoundSynthesizer>"""
-    return render_csd(csd_template)
+    return render_csd(csd_template, output_filename)
 
 def map_0_255_to_range(val: int, min_val: float, max_val: float) -> float:
     """Map an integer 0-255 linearly to a float range."""
@@ -88,7 +96,8 @@ def synthesize_subtractive(
     attack: int, 
     decay: int, 
     sustain: int, 
-    release: int
+    release: int,
+    output_filename: str | None = None
 ) -> str:
     """
     Generate a tone using subtractive synthesis (sawtooth + lowpass filter).
@@ -101,6 +110,7 @@ def synthesize_subtractive(
         decay: Amp decay time, 0-255. Maps to 0.001 - 2.0s.
         sustain: Amp sustain level, 0-255. Maps to 0.0 - 1.0.
         release: Amp release time, 0-255. Maps to 0.001 - 5.0s.
+        output_filename: Optional name for the output file.
         
     Returns:
         The absolute path to the generated .wav file.
@@ -152,7 +162,7 @@ endin
 i 1 0 {duration}
 </CsScore>
 </CsoundSynthesizer>"""
-    return render_csd(csd)
+    return render_csd(csd, output_filename)
 
 def main():
     mcp.run(transport='stdio')

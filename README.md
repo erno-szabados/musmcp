@@ -85,7 +85,8 @@ Here is how an agent should map desired sounds to the tool's parameters:
   "attack": 5,
   "decay": 80,
   "sustain": 0,
-  "release": 50
+  "release": 50,
+  "output_filename": "bass_pluck.wav"
 }
 ```
 
@@ -98,7 +99,8 @@ Here is how an agent should map desired sounds to the tool's parameters:
   "attack": 150,
   "decay": 100,
   "sustain": 200,
-  "release": 200
+  "release": 200,
+  "output_filename": "warm_pad.wav"
 }
 ```
 
@@ -111,6 +113,7 @@ Here is how an agent should map desired sounds to the tool's parameters:
   "attack": 10,
   "decay": 50,
   "sustain": 255,
-  "release": 20
+  "release": 20,
+  "output_filename": "aggr_lead.wav"
 }
 ```
